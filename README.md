@@ -82,9 +82,8 @@ $refCode = Invite::invite($to, Auth::user()->id, Carbon::now()->addYear(1),
 
 Invitation codes are 40 random alphanumeric characters generated with a cryptographically secure generator.
 
-The `BEFORE_SAVE_CALLBACK` runs just before the invitation is saved. A closure is bound to the invitation model,
-so you can use `$this` inside it, and it also receives the model as its first argument. Any other callable
-receives the model as its only argument.
+The `BEFORE_SAVE_CALLBACK` can be any callable. It runs just before the invitation is saved and receives the
+invitation model as its only argument.
 
 now create routes with `refCode`, when user access that route you can use following methods
 ```php
@@ -128,6 +127,12 @@ DB::transaction(function () use ($code, $data) {
     User::create($data);
 });
 ```
+
+The status change is still saved through Eloquent, so model events and observers on the invitation model fire as
+before. Note that `InvitationConsumed` (like the other events) is dispatched immediately, not after the surrounding
+transaction commits: if the transaction rolls back, the invitation goes back to `pending` but listeners have
+already run. Make side-effect listeners (emails, jobs) queued with `$afterCommit = true`, or dispatch your own
+follow-up work with `DB::afterCommit()`.
 
 A `pending` invitation past its `valid_till` is marked `expired` (firing `InvitationExpired`) the first time it is
 checked. Invitations that were already `successful` or `canceled` keep their status; `isExpired()` still reports
@@ -202,6 +207,11 @@ you can also change invitation model to be used, in `larainvite.php`
   ```
 
 * Invitation codes are now 40 characters (previously 32-character md5 hashes). Existing codes keep working.
+  If a custom migration sized the `code` column for md5 (e.g. `string('code', 32)`), widen it to at least 40
+  characters before upgrading: strict MySQL rejects the insert, and non-strict MySQL truncates the code so every
+  new link is invalid. The stock column is 255 characters.
+* A `$beforeSave` closure is called with the invitation model as its argument; `$this` inside it is still your own
+  class, as before.
 
 ## Testing
 

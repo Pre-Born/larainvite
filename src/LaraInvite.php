@@ -3,7 +3,6 @@
 namespace Junaidnasir\Larainvite;
 
 use Carbon\Carbon;
-use Closure;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use Junaidnasir\Larainvite\Events\InvitationCanceled;
@@ -11,7 +10,6 @@ use Junaidnasir\Larainvite\Events\InvitationConsumed;
 use Junaidnasir\Larainvite\Events\InvitationExpired;
 use Junaidnasir\Larainvite\Events\Invited;
 use Junaidnasir\Larainvite\Exceptions\InvalidTokenException;
-use ReflectionFunction;
 
 /**
  *   Laravel Invitation class.
@@ -158,7 +156,7 @@ class LaraInvite implements InvitationInterface
         if (! $this->isExisting()) {
             return true;
         }
-        if (Carbon::parse($this->instance->valid_till)->getTimestamp() >= Carbon::now()->getTimestamp()) {
+        if (! $this->validTillHasPassed()) {
             return false;
         }
         // only a pending invitation becomes 'expired'; accepted/canceled ones keep their status
@@ -230,10 +228,7 @@ class LaraInvite implements InvitationInterface
         $this->instance->code = $code;
 
         if ($beforeSave !== null) {
-            if ($beforeSave instanceof Closure && ! (new ReflectionFunction($beforeSave))->isStatic()) {
-                // $this inside the closure is the model; it is also passed as the first argument
-                $beforeSave->call($this->instance, $this->instance);
-            } elseif (is_callable($beforeSave)) {
+            if (is_callable($beforeSave)) {
                 $beforeSave($this->instance);
             }
         }
@@ -256,18 +251,45 @@ class LaraInvite implements InvitationInterface
     {
         $query = $this->instance->newQuery()
             ->whereKey($this->instance->getKey())
-            ->where('code', $this->instance->code)
             ->where('status', 'pending');
 
         if ($requireValid) {
             $query->where('valid_till', '>=', Carbon::now());
         }
 
-        $changed = $query->update(['status' => $status]) === 1;
+        // the conditional update decides the single winner
+        if ($query->toBase()->update(['status' => $status]) !== 1) {
+            $fresh = $this->instance->fresh();
+            if ($fresh !== null) {
+                $this->instance = $fresh;
+            }
 
-        $this->instance->refresh();
+            return false;
+        }
 
-        return $changed;
+        // persist through Eloquent as well, so model events, observers and save() overrides still run
+        $this->instance->status = $status;
+        $this->instance->save();
+
+        return true;
+    }
+
+    /**
+     * check if valid_till is in the past; a missing or unparseable value counts as expired.
+     * @return bool
+     */
+    private function validTillHasPassed()
+    {
+        $validTill = $this->instance->valid_till;
+        if ($validTill === null || $validTill === '') {
+            return true;
+        }
+
+        try {
+            return Carbon::parse($validTill)->getTimestamp() < Carbon::now()->getTimestamp();
+        } catch (\Exception $exception) {
+            return true;
+        }
     }
 
     /**

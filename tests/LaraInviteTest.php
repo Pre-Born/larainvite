@@ -4,7 +4,9 @@ namespace Junaidnasir\Larainvite\Tests;
 
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
 use Junaidnasir\Larainvite\Events\InvitationCanceled;
 use Junaidnasir\Larainvite\Events\InvitationConsumed;
 use Junaidnasir\Larainvite\Events\InvitationExpired;
@@ -15,6 +17,8 @@ use Junaidnasir\Larainvite\Models\LaraInviteModel;
 
 class LaraInviteTest extends TestCase
 {
+    public $callerEmail;
+
     private function statusInDb($code)
     {
         return LaraInviteModel::where('code', $code)->value('status');
@@ -111,6 +115,54 @@ class LaraInviteTest extends TestCase
         $this->assertSame('successful', $this->statusInDb($code));
     }
 
+    public function test_model_events_fire_on_consume_cancel_and_expire()
+    {
+        $updated = [];
+        LaraInviteModel::updated(function ($invitation) use (&$updated) {
+            $updated[] = [$invitation->getOriginal('status'), $invitation->status];
+        });
+
+        Invite::consume(Invite::invite('john@example.com', 1));
+        Invite::cancel(Invite::invite('jane@example.com', 1));
+        $expiring = Invite::invite('jim@example.com', 1, Carbon::now()->addHour());
+        $this->travel(2)->hours();
+        Invite::isExpired($expiring);
+
+        // observers see the same pending -> new status change as with the old save()
+        $this->assertSame([
+            ['pending', 'successful'],
+            ['pending', 'canceled'],
+            ['pending', 'expired'],
+        ], $updated);
+    }
+
+    public function test_consume_returns_false_when_row_was_deleted()
+    {
+        $code = Invite::invite('john@example.com', 1);
+        $invite = (new LaraInvite)->setCode($code);
+
+        LaraInviteModel::where('code', $code)->delete();
+
+        $this->assertFalse($invite->consume());
+    }
+
+    public function test_missing_or_malformed_valid_till_counts_as_expired()
+    {
+        Schema::table('user_invitations', function (Blueprint $table) {
+            $table->dateTime('valid_till')->nullable()->change();
+        });
+
+        $missing = Invite::invite('john@example.com', 1);
+        LaraInviteModel::where('code', $missing)->update(['valid_till' => null]);
+        $malformed = Invite::invite('jane@example.com', 1);
+        LaraInviteModel::where('code', $malformed)->update(['valid_till' => 'not-a-date']);
+
+        $this->assertTrue(Invite::isExpired($missing));
+        $this->assertFalse(Invite::consume($missing));
+        $this->assertTrue(Invite::isExpired($malformed));
+        $this->assertFalse(Invite::consume($malformed));
+    }
+
     public function test_pending_invitation_past_expiry_is_marked_expired()
     {
         Event::fake([InvitationExpired::class]);
@@ -165,13 +217,22 @@ class LaraInviteTest extends TestCase
         $this->assertSame('pending', $this->statusInDb($code));
     }
 
-    public function test_before_save_closure_is_bound_to_model()
+    public function test_before_save_closure_keeps_callers_this()
     {
-        $code = Invite::invite('john@example.com', 1, null, function () {
-            $this->email = 'bound@example.com';
+        $this->callerEmail = 'caller@example.com';
+
+        $code = Invite::invite('john@example.com', 1, null, function ($invitation) {
+            $invitation->email = $this->callerEmail;
         });
 
-        $this->assertSame('bound@example.com', Invite::get($code)->email);
+        $this->assertSame('caller@example.com', Invite::get($code)->email);
+    }
+
+    public function test_before_save_accepts_first_class_callables()
+    {
+        $code = Invite::invite('john@example.com', 1, null, $this->setCallableEmail(...));
+
+        $this->assertSame('callable@example.com', Invite::get($code)->email);
     }
 
     public function test_before_save_closure_still_receives_model_argument()
