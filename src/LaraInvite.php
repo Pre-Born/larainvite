@@ -2,12 +2,16 @@
 
 namespace Junaidnasir\Larainvite;
 
+use Carbon\Carbon;
+use Closure;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str;
 use Junaidnasir\Larainvite\Events\InvitationCanceled;
 use Junaidnasir\Larainvite\Events\InvitationConsumed;
 use Junaidnasir\Larainvite\Events\InvitationExpired;
 use Junaidnasir\Larainvite\Events\Invited;
 use Junaidnasir\Larainvite\Exceptions\InvalidTokenException;
+use ReflectionFunction;
 
 /**
  *   Laravel Invitation class.
@@ -69,6 +73,9 @@ class LaraInvite implements InvitationInterface
     public function setCode($code)
     {
         $this->code = $code;
+        // never let a previous lookup leak into this one (singleton in long-running processes)
+        $this->instance = null;
+        $this->exist = false;
         try {
             $this->getModelInstance(false);
         } catch (InvalidTokenException $exception) {
@@ -104,10 +111,7 @@ class LaraInvite implements InvitationInterface
      */
     public function consume()
     {
-        if ($this->isValid()) {
-            $this->instance->status = 'successful';
-            $this->instance->save();
-
+        if ($this->isValid() && $this->transitionFromPending('successful', true)) {
             InvitationConsumed::dispatch($this->instance);
 
             return true;
@@ -121,10 +125,7 @@ class LaraInvite implements InvitationInterface
      */
     public function cancel()
     {
-        if ($this->isValid()) {
-            $this->instance->status = 'canceled';
-            $this->instance->save();
-
+        if ($this->isValid() && $this->transitionFromPending('canceled', true)) {
             InvitationCanceled::dispatch($this->instance);
 
             return true;
@@ -157,13 +158,13 @@ class LaraInvite implements InvitationInterface
         if (! $this->isExisting()) {
             return true;
         }
-        if (strtotime($this->instance->valid_till) >= time()) {
+        if (Carbon::parse($this->instance->valid_till)->getTimestamp() >= Carbon::now()->getTimestamp()) {
             return false;
         }
-        $this->instance->status = 'expired';
-        $this->instance->save();
-
-        InvitationExpired::dispatch($this->instance);
+        // only a pending invitation becomes 'expired'; accepted/canceled ones keep their status
+        if ($this->instance->status === 'pending' && $this->transitionFromPending('expired', false)) {
+            InvitationExpired::dispatch($this->instance);
+        }
 
         return true;
     }
@@ -185,7 +186,8 @@ class LaraInvite implements InvitationInterface
      */
     public function isAllowed($email)
     {
-        return $this->isValid() && ($this->instance->email === $email);
+        return $this->isValid()
+            && Str::lower(trim((string) $this->instance->email)) === Str::lower(trim((string) $email));
     }
 
     /**
@@ -207,7 +209,7 @@ class LaraInvite implements InvitationInterface
      */
     private function createInvite($beforeSave = null)
     {
-        $code = md5(uniqid('', true));
+        $code = Str::random(40);
 
         return $this->save($code, $beforeSave);
     }
@@ -228,8 +230,9 @@ class LaraInvite implements InvitationInterface
         $this->instance->code = $code;
 
         if ($beforeSave !== null) {
-            if ($beforeSave instanceof Closure) {
-                $beforeSave->call($this->instance);
+            if ($beforeSave instanceof Closure && ! (new ReflectionFunction($beforeSave))->isStatic()) {
+                // $this inside the closure is the model; it is also passed as the first argument
+                $beforeSave->call($this->instance, $this->instance);
             } elseif (is_callable($beforeSave)) {
                 $beforeSave($this->instance);
             }
@@ -240,6 +243,31 @@ class LaraInvite implements InvitationInterface
         $this->exist = true;
 
         return $this;
+    }
+
+    /**
+     * atomically move the invitation from 'pending' to $status.
+     * returns true only for the one caller whose update actually changed the row.
+     * @param  string $status       new status
+     * @param  bool   $requireValid also require valid_till to be in the future
+     * @return bool
+     */
+    private function transitionFromPending($status, $requireValid)
+    {
+        $query = $this->instance->newQuery()
+            ->whereKey($this->instance->getKey())
+            ->where('code', $this->instance->code)
+            ->where('status', 'pending');
+
+        if ($requireValid) {
+            $query->where('valid_till', '>=', Carbon::now());
+        }
+
+        $changed = $query->update(['status' => $status]) === 1;
+
+        $this->instance->refresh();
+
+        return $changed;
     }
 
     /**
