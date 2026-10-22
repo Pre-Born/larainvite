@@ -60,7 +60,7 @@ class LaraInvite implements InvitationInterface
         $this->readyPayload($email, $referral, $expires)
              ->createInvite($beforeSave);
 
-        Invited::dispatch($this->instance);
+        $this->dispatchAfterCommit(Invited::class);
 
         return $this->code;
     }
@@ -110,7 +110,7 @@ class LaraInvite implements InvitationInterface
     public function consume()
     {
         if ($this->isValid() && $this->transitionFromPending('successful', true)) {
-            InvitationConsumed::dispatch($this->instance);
+            $this->dispatchAfterCommit(InvitationConsumed::class);
 
             return true;
         }
@@ -124,7 +124,7 @@ class LaraInvite implements InvitationInterface
     public function cancel()
     {
         if ($this->isValid() && $this->transitionFromPending('canceled', true)) {
-            InvitationCanceled::dispatch($this->instance);
+            $this->dispatchAfterCommit(InvitationCanceled::class);
 
             return true;
         }
@@ -161,7 +161,7 @@ class LaraInvite implements InvitationInterface
         }
         // only a pending invitation becomes 'expired'; accepted/canceled ones keep their status
         if ($this->instance->status === 'pending' && $this->transitionFromPending('expired', false)) {
-            InvitationExpired::dispatch($this->instance);
+            $this->dispatchAfterCommit(InvitationExpired::class);
         }
 
         return true;
@@ -272,6 +272,22 @@ class LaraInvite implements InvitationInterface
         $this->instance->save();
 
         return true;
+    }
+
+    /**
+     * dispatch $event for the current invitation once the surrounding transaction commits.
+     * runs immediately when no transaction is open, and never runs if the transaction rolls back.
+     * @param  string $event event class
+     * @return void
+     */
+    private function dispatchAfterCommit($event)
+    {
+        // capture the model now; the singleton may point at another invitation by commit time
+        $invitation = $this->instance;
+
+        $invitation->getConnection()->afterCommit(function () use ($event, $invitation) {
+            $event::dispatch($invitation);
+        });
     }
 
     /**

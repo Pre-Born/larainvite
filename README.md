@@ -129,10 +129,9 @@ DB::transaction(function () use ($code, $data) {
 ```
 
 The status change is still saved through Eloquent, so model events and observers on the invitation model fire as
-before. Note that `InvitationConsumed` (like the other events) is dispatched immediately, not after the surrounding
-transaction commits: if the transaction rolls back, the invitation goes back to `pending` but listeners have
-already run. Make side-effect listeners (emails, jobs) queued with `$afterCommit = true`, or dispatch your own
-follow-up work with `DB::afterCommit()`.
+before. The package events (`Invited`, `InvitationConsumed`, `InvitationCanceled`, `InvitationExpired`) are
+dispatched after the surrounding transaction commits, so if it rolls back, the invitation goes back to `pending` and
+listeners never run. Outside a transaction they are dispatched immediately.
 
 A `pending` invitation past its `valid_till` is marked `expired` (firing `InvitationExpired`) the first time it is
 checked. Invitations that were already `successful` or `canceled` keep their status; `isExpired()` still reports

@@ -5,6 +5,7 @@ namespace Junaidnasir\Larainvite\Tests;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Junaidnasir\Larainvite\Events\InvitationCanceled;
@@ -267,5 +268,47 @@ class LaraInviteTest extends TestCase
         $this->assertTrue(Invite::isAllowed($code, 'john.doe@example.com'));
         $this->assertTrue(Invite::isAllowed($code, '  JOHN.DOE@EXAMPLE.COM '));
         $this->assertFalse(Invite::isAllowed($code, 'someone@example.com'));
+    }
+
+    public function test_consume_event_waits_for_commit_and_is_dropped_on_rollback()
+    {
+        Event::fake([InvitationConsumed::class]);
+        $code = Invite::invite('john@example.com', 1);
+
+        try {
+            DB::transaction(function () use ($code) {
+                $this->assertTrue(Invite::consume($code));
+                Event::assertNotDispatched(InvitationConsumed::class);
+
+                throw new \RuntimeException('account creation failed');
+            });
+        } catch (\RuntimeException $exception) {
+        }
+
+        $this->assertSame('pending', $this->statusInDb($code));
+        Event::assertNotDispatched(InvitationConsumed::class);
+
+        DB::transaction(function () use ($code) {
+            $this->assertTrue(Invite::consume($code));
+        });
+
+        Event::assertDispatchedTimes(InvitationConsumed::class, 1);
+    }
+
+    public function test_invited_event_is_not_dispatched_when_transaction_rolls_back()
+    {
+        Event::fake([Invited::class]);
+
+        try {
+            DB::transaction(function () {
+                Invite::invite('john@example.com', 1);
+
+                throw new \RuntimeException('rolled back');
+            });
+        } catch (\RuntimeException $exception) {
+        }
+
+        $this->assertSame(0, LaraInviteModel::count());
+        Event::assertNotDispatched(Invited::class);
     }
 }
