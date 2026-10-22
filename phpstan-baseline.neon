@@ -1,0 +1,241 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Class App\\Models\\User not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Config/larainvite.php
+
+		-
+			message: '#^Method Junaidnasir\\Larainvite\\InvitationInterface\:\:get\(\) has invalid return type Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/InvitationInterface.php
+
+		-
+			message: '#^Parameter \$expires of method Junaidnasir\\Larainvite\\InvitationInterface\:\:invite\(\) has invalid type Junaidnasir\\Larainvite\\DateTime\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/InvitationInterface.php
+
+		-
+			message: '#^Trait Junaidnasir\\Larainvite\\InviteTrait is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/InviteTrait.php
+
+		-
+			message: '#^Access to property \$code on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Access to property \$email on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 3
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Access to property \$status on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 5
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Access to property \$user_id on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Access to property \$valid_till on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 3
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to function is_callable\(\) with \*NEVER\* will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to method fresh\(\) on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to method getConnection\(\) on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to method getKey\(\) on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to method newQuery\(\) on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Call to method save\(\) on an unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 2
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Method Junaidnasir\\Larainvite\\LaraInvite\:\:get\(\) has invalid return type Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^PHPDoc tag @var has invalid value \(\[type\]\)\: Unexpected token "\[", expected type at offset 47 on line 3$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Parameter \#1 \$invitation of event class Junaidnasir\\Larainvite\\Events\\Invited constructor expects Junaidnasir\\Larainvite\\Models\\LaraInviteModel in Junaidnasir\\Larainvite\\Events\\Invited\:\:dispatch\(\), Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Parameter \$expires of method Junaidnasir\\Larainvite\\LaraInvite\:\:invite\(\) has invalid type Junaidnasir\\Larainvite\\DateTime\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Parameter \$expires of method Junaidnasir\\Larainvite\\LaraInvite\:\:readyPayload\(\) has invalid type Junaidnasir\\Larainvite\\DateTime\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Property Junaidnasir\\Larainvite\\LaraInvite\:\:\$expires has unknown class Junaidnasir\\Larainvite\\DateTime as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Property Junaidnasir\\Larainvite\\LaraInvite\:\:\$instance \(Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel\) does not accept null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Property Junaidnasir\\Larainvite\\LaraInvite\:\:\$instance has unknown class Junaidnasir\\Larainvite\\Junaidnasir\\Larainvite\\Models\\LaraInviteModel as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: src/LaraInvite.php
+
+		-
+			message: '#^Method Carbon\\Carbon\:\:addHour\(\) invoked with 1 parameter, 0 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/UserInvitation.php
+
+		-
+			message: '#^Method Junaidnasir\\Larainvite\\InvitationInterface\:\:invite\(\) invoked with 4 parameters, 3 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/UserInvitation.php
+
+		-
+			message: '#^Parameter \#3 \$expires of method Junaidnasir\\Larainvite\\InvitationInterface\:\:invite\(\) expects Junaidnasir\\Larainvite\\DateTime, Carbon\\Carbon given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/UserInvitation.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between null and null will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: src/UserInvitation.php
+
+		-
+			message: '#^Access to an undefined property Junaidnasir\\Larainvite\\Models\\LaraInviteModel\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Access to an undefined property Junaidnasir\\Larainvite\\Models\\LaraInviteModel\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Access to an undefined property Junaidnasir\\Larainvite\\Models\\LaraInviteModel\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Access to an undefined property Junaidnasir\\Larainvite\\Models\\LaraInviteModel\:\:\$valid_till\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:cancel\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:consume\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 11
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:get\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 8
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:invite\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 25
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:isAllowed\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:isExpired\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 6
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:isValid\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 4
+			path: tests/LaraInviteTest.php
+
+		-
+			message: '#^Call to an undefined static method Junaidnasir\\Larainvite\\Facades\\Invite\:\:status\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 2
+			path: tests/LaraInviteTest.php
