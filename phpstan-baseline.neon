@@ -97,7 +97,7 @@ parameters:
 			path: src/LaraInvite.php
 
 		-
-			message: '#^PHPDoc tag @var has invalid value \(\[type\]\)\: Unexpected token "\[", expected type at offset 47 on line 3$#'
+			message: '#^PHPDoc tag @var has invalid value \(\[type\]\)\: Unexpected token "\[", expected type at offset 54 on line 4$#'
 			identifier: phpDoc.parseError
 			count: 1
 			path: src/LaraInvite.php

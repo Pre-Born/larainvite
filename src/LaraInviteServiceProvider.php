@@ -18,7 +18,7 @@ class LaraInviteServiceProvider extends ServiceProvider implements DeferrablePro
             __DIR__.'/Config/larainvite.php' => config_path('larainvite.php'),
         ], 'config');
         $this->publishes([
-            __DIR__.'/Migrations/' => base_path('/database/migrations')
+            __DIR__.'/Migrations/' => base_path('/database/migrations'),
         ], 'migrations');
     }
 
@@ -31,8 +31,9 @@ class LaraInviteServiceProvider extends ServiceProvider implements DeferrablePro
     {
         $this->mergeConfigFrom(__DIR__.'/Config/larainvite.php', 'larainvite');
         $this->app->singleton('invite', function ($app) {
-            $laravelImplementation = new \Junaidnasir\Larainvite\LaraInvite();
-            return new \Junaidnasir\Larainvite\UserInvitation($laravelImplementation);
+            $laravelImplementation = new LaraInvite;
+
+            return new UserInvitation($laravelImplementation);
         });
     }
 

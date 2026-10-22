@@ -1,4 +1,7 @@
 <?php
+
+use App\Models\User;
+
 return [
 
     /*
@@ -17,12 +20,12 @@ return [
     | User Model
     |--------------------------------------------------------------------------
     */
-    'UserModel' => config('auth.providers.users.model', App\Models\User::class),
+    'UserModel' => config('auth.providers.users.model', User::class),
 
     /*
     |--------------------------------------------------------------------------
     | Invitation Model
     |--------------------------------------------------------------------------
     */
-    'InvitationModel' => 'Junaidnasir\Larainvite\Models\LaraInviteModel'
+    'InvitationModel' => 'Junaidnasir\Larainvite\Models\LaraInviteModel',
 ];

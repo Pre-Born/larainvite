@@ -1,22 +1,22 @@
-<?php namespace Junaidnasir\Larainvite;
+<?php
 
-use \Exception;
+namespace Junaidnasir\Larainvite;
+
 use Carbon\Carbon;
-use Junaidnasir\Larainvite\InvitationInterface;
+use Exception;
 
 /**
-* User Invitation class
-*/
+ * User Invitation class
+ */
 class UserInvitation
 {
     /**
-     * @var \Junaidnasir\Larainvite\InvitationInterface
+     * @var InvitationInterface
      */
     private $interface;
 
     /**
      * UserInvitation constructor.
-     * @param \Junaidnasir\Larainvite\InvitationInterface $interface
      */
     public function __construct(InvitationInterface $interface)
     {
@@ -24,22 +24,21 @@ class UserInvitation
     }
 
     /**
-     * @param $email
-     * @param $referral
-     * @param null $expires
-     * @param null $beforeSave
+     * @param  null  $expires
+     * @param  null  $beforeSave
      * @return string
+     *
      * @throws Exception
      */
     public function invite($email, $referral, $expires = null, $beforeSave = null)
     {
         $expires = $expires === null ? Carbon::now()->addHour(config('larainvite.expires')) : $expires;
         $this->validateEmail($email);
+
         return $this->interface->invite($email, $referral, $expires, $beforeSave);
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function get($code)
@@ -48,7 +47,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function status($code)
@@ -57,7 +55,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function isValid($code)
@@ -66,7 +63,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function isExpired($code)
@@ -75,7 +71,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function isPending($code)
@@ -84,8 +79,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
-     * @param $email
      * @return mixed
      */
     public function isAllowed($code, $email)
@@ -94,7 +87,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function consume($code)
@@ -103,7 +95,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function cancel($code)
@@ -112,7 +103,6 @@ class UserInvitation
     }
 
     /**
-     * @param $code
      * @return mixed
      */
     public function reminder($code)
@@ -121,14 +111,14 @@ class UserInvitation
     }
 
     /**
-     * @param $email
      * @return $this
      */
     public function validateEmail($email)
     {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new \RuntimeException('Invalid Email Address', 1);
         }
+
         return $this;
     }
 }
