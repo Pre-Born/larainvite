@@ -15,6 +15,7 @@ use Junaidnasir\Larainvite\Events\Invited;
 use Junaidnasir\Larainvite\Facades\Invite;
 use Junaidnasir\Larainvite\LaraInvite;
 use Junaidnasir\Larainvite\Models\LaraInviteModel;
+use Junaidnasir\Larainvite\Tests\Fixtures\User;
 
 class LaraInviteTest extends TestCase
 {
@@ -310,5 +311,24 @@ class LaraInviteTest extends TestCase
 
         $this->assertSame(0, LaraInviteModel::count());
         Event::assertNotDispatched(Invited::class);
+    }
+
+    public function test_invite_trait_returns_a_users_invitations()
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+        });
+        $user = new User;
+        $user->save();
+
+        Invite::consume(Invite::invite('john@example.com', $user->id));
+        Invite::invite('jane@example.com', $user->id);
+        Invite::invite('jim@example.com', $user->id + 1);
+
+        $this->assertSame(2, $user->invitations()->count());
+        $this->assertSame(1, $user->invitationSuccess()->count());
+        $this->assertSame(1, $user->invitationPending()->count());
+        $this->assertSame('jane@example.com', $user->invitationPending()->value('email'));
     }
 }

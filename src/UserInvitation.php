@@ -4,6 +4,7 @@ namespace Junaidnasir\Larainvite;
 
 use Carbon\Carbon;
 use Exception;
+use Junaidnasir\Larainvite\Models\LaraInviteModel;
 
 /**
  * User Invitation class
@@ -24,22 +25,26 @@ class UserInvitation
     }
 
     /**
-     * @param  null  $expires
-     * @param  null  $beforeSave
+     * @param  string  $email
+     * @param  int  $referral
+     * @param  \DateTimeInterface|string|null  $expires
+     * @param  callable|null  $beforeSave
      * @return string
      *
      * @throws Exception
      */
     public function invite($email, $referral, $expires = null, $beforeSave = null)
     {
-        $expires = $expires === null ? Carbon::now()->addHour(config('larainvite.expires')) : $expires;
+        $expires = $expires === null ? Carbon::now()->addHours(config('larainvite.expires')) : $expires;
         $this->validateEmail($email);
 
+        // InvitationInterface::invite() does not declare $beforeSave; adding it would break custom implementations
+        // @phpstan-ignore arguments.count
         return $this->interface->invite($email, $referral, $expires, $beforeSave);
     }
 
     /**
-     * @return mixed
+     * @return LaraInviteModel|null
      */
     public function get($code)
     {
@@ -47,7 +52,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function status($code)
     {
@@ -55,7 +60,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function isValid($code)
     {
@@ -63,7 +68,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function isExpired($code)
     {
@@ -71,7 +76,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function isPending($code)
     {
@@ -79,7 +84,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function isAllowed($code, $email)
     {
@@ -87,7 +92,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function consume($code)
     {
@@ -95,7 +100,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function cancel($code)
     {
@@ -103,7 +108,7 @@ class UserInvitation
     }
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function reminder($code)
     {

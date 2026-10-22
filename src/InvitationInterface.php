@@ -2,6 +2,8 @@
 
 namespace Junaidnasir\Larainvite;
 
+use Junaidnasir\Larainvite\Models\LaraInviteModel;
+
 interface InvitationInterface
 {
     /**
@@ -9,7 +11,7 @@ interface InvitationInterface
      *
      * @param  string  $email  Email to invite
      * @param  int  $referral  Referral
-     * @param  DateTime  $expires  Expiration Date Time
+     * @param  \DateTimeInterface|string  $expires  Expiration Date Time
      * @return string Referral code
      */
     public function invite($email, $referral, $expires);
@@ -24,7 +26,7 @@ interface InvitationInterface
     /**
      * Returns Invitation record
      *
-     * @return Junaidnasir\Larainvite\Models\LaraInviteModel
+     * @return LaraInviteModel|null
      */
     public function get();
 
