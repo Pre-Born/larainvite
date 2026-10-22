@@ -18,36 +18,42 @@ class LaraInvite implements InvitationInterface
 {
     /**
      * Email address to invite.
+     *
      * @var string
      */
     private $email;
 
     /**
      * Referral Code for invitation.
+     *
      * @var string
      */
     private $code = null;
 
     /**
      * Status of code existing in DB.
+     *
      * @var bool
      */
     private $exist = false;
 
     /**
      * integer ID of referral.
+     *
      * @var [type]
      */
     private $referral;
 
     /**
      * DateTime of referral code expiration.
+     *
      * @var DateTime
      */
     private $expires;
 
     /**
      * Invitation Model.
+     *
      * @var Junaidnasir\Larainvite\Models\LaraInviteModel
      */
     private $instance = null;
@@ -58,7 +64,7 @@ class LaraInvite implements InvitationInterface
     public function invite($email, $referral, $expires, $beforeSave = null)
     {
         $this->readyPayload($email, $referral, $expires)
-             ->createInvite($beforeSave);
+            ->createInvite($beforeSave);
 
         $this->dispatchAfterCommit(Invited::class);
 
@@ -190,6 +196,7 @@ class LaraInvite implements InvitationInterface
 
     /**
      * Fire junaidnasir.larainvite.invited again for the invitation.
+     *
      * @return true
      */
     public function reminder()
@@ -201,8 +208,10 @@ class LaraInvite implements InvitationInterface
 
     /**
      * generate invitation code and call save.
-     * @param null $beforeSave
+     *
+     * @param  null  $beforeSave
      * @return self
+     *
      * @throws InvalidTokenException
      */
     private function createInvite($beforeSave = null)
@@ -214,9 +223,11 @@ class LaraInvite implements InvitationInterface
 
     /**
      * saves invitation in DB.
-     * @param string $code referral code
-     * @param null $beforeSave
+     *
+     * @param  string  $code  referral code
+     * @param  null  $beforeSave
      * @return self
+     *
      * @throws InvalidTokenException
      */
     private function save($code, $beforeSave = null)
@@ -243,8 +254,9 @@ class LaraInvite implements InvitationInterface
     /**
      * atomically move the invitation from 'pending' to $status.
      * returns true only for the one caller whose update actually changed the row.
-     * @param  string $status       new status
-     * @param  bool   $requireValid also require valid_till to be in the future
+     *
+     * @param  string  $status  new status
+     * @param  bool  $requireValid  also require valid_till to be in the future
      * @return bool
      */
     private function transitionFromPending($status, $requireValid)
@@ -277,7 +289,8 @@ class LaraInvite implements InvitationInterface
     /**
      * dispatch $event for the current invitation once the surrounding transaction commits.
      * runs immediately when no transaction is open, and never runs if the transaction rolls back.
-     * @param  string $event event class
+     *
+     * @param  string  $event  event class
      * @return void
      */
     private function dispatchAfterCommit($event)
@@ -292,6 +305,7 @@ class LaraInvite implements InvitationInterface
 
     /**
      * check if valid_till is in the past; a missing or unparseable value counts as expired.
+     *
      * @return bool
      */
     private function validTillHasPassed()
@@ -310,8 +324,10 @@ class LaraInvite implements InvitationInterface
 
     /**
      * set $this->instance to Junaidnasir\Larainvite\Models\LaraInviteModel instance.
-     * @param bool $allowNew allow new model
+     *
+     * @param  bool  $allowNew  allow new model
      * @return self
+     *
      * @throws InvalidTokenException
      */
     private function getModelInstance($allowNew = true)
@@ -334,9 +350,10 @@ class LaraInvite implements InvitationInterface
 
     /**
      * set input variables.
-     * @param  string   $email    email to invite
-     * @param  int  $referral referral id
-     * @param  DateTime $expires  expiration of token
+     *
+     * @param  string  $email  email to invite
+     * @param  int  $referral  referral id
+     * @param  DateTime  $expires  expiration of token
      * @return self
      */
     private function readyPayload($email, $referral, $expires)
