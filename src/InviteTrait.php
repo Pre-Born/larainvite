@@ -2,12 +2,15 @@
 
 namespace Junaidnasir\Larainvite;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 trait InviteTrait
 {
     /**
      * return all invitation as laravel collection
      *
-     * @return hasMany invitation Models
+     * @return HasMany<Model, $this>
      */
     public function invitations()
     {
@@ -17,7 +20,7 @@ trait InviteTrait
     /**
      * return successful initation by a user
      *
-     * @return hasMany
+     * @return HasMany<Model, $this>
      */
     public function invitationSuccess()
     {
@@ -27,7 +30,7 @@ trait InviteTrait
     /**
      * return pending invitations by a user
      *
-     * @return hasMany
+     * @return HasMany<Model, $this>
      */
     public function invitationPending()
     {

@@ -3,6 +3,7 @@
 namespace Junaidnasir\Larainvite;
 
 use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use Junaidnasir\Larainvite\Events\InvitationCanceled;
@@ -10,6 +11,7 @@ use Junaidnasir\Larainvite\Events\InvitationConsumed;
 use Junaidnasir\Larainvite\Events\InvitationExpired;
 use Junaidnasir\Larainvite\Events\Invited;
 use Junaidnasir\Larainvite\Exceptions\InvalidTokenException;
+use Junaidnasir\Larainvite\Models\LaraInviteModel;
 
 /**
  *   Laravel Invitation class.
@@ -26,7 +28,7 @@ class LaraInvite implements InvitationInterface
     /**
      * Referral Code for invitation.
      *
-     * @var string
+     * @var string|null
      */
     private $code = null;
 
@@ -40,21 +42,21 @@ class LaraInvite implements InvitationInterface
     /**
      * integer ID of referral.
      *
-     * @var [type]
+     * @var int
      */
     private $referral;
 
     /**
      * DateTime of referral code expiration.
      *
-     * @var DateTime
+     * @var DateTimeInterface|string
      */
     private $expires;
 
     /**
      * Invitation Model.
      *
-     * @var Junaidnasir\Larainvite\Models\LaraInviteModel
+     * @var LaraInviteModel|null
      */
     private $instance = null;
 
@@ -209,7 +211,7 @@ class LaraInvite implements InvitationInterface
     /**
      * generate invitation code and call save.
      *
-     * @param  null  $beforeSave
+     * @param  callable|null  $beforeSave
      * @return self
      *
      * @throws InvalidTokenException
@@ -225,7 +227,7 @@ class LaraInvite implements InvitationInterface
      * saves invitation in DB.
      *
      * @param  string  $code  referral code
-     * @param  null  $beforeSave
+     * @param  callable|null  $beforeSave
      * @return self
      *
      * @throws InvalidTokenException
@@ -238,10 +240,8 @@ class LaraInvite implements InvitationInterface
         $this->instance->valid_till = $this->expires;
         $this->instance->code = $code;
 
-        if ($beforeSave !== null) {
-            if (is_callable($beforeSave)) {
-                $beforeSave($this->instance);
-            }
+        if (is_callable($beforeSave)) {
+            $beforeSave($this->instance);
         }
         $this->instance->save();
 
@@ -353,7 +353,7 @@ class LaraInvite implements InvitationInterface
      *
      * @param  string  $email  email to invite
      * @param  int  $referral  referral id
-     * @param  DateTime  $expires  expiration of token
+     * @param  DateTimeInterface|string  $expires  expiration of token
      * @return self
      */
     private function readyPayload($email, $referral, $expires)
