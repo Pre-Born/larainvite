@@ -8,6 +8,7 @@ It generates a one-time invitation code that can be sent as an invite link, and 
 [![Total Downloads](https://poser.pugx.org/junaidnasir/larainvite/downloads)](https://packagist.org/packages/junaidnasir/larainvite)
 [![Monthly Downloads](https://poser.pugx.org/junaidnasir/larainvite/d/monthly)](https://packagist.org/packages/junaidnasir/larainvite)
 
+- v13 supports Laravel 13 (v13.1 requires PHP 8.1+)
 - v12 supports Laravel 12
 - v7 supports Laravel 11
 - v6 supports Laravel 10
@@ -79,6 +80,11 @@ $refCode = Invite::invite($to, Auth::user()->id, Carbon::now()->addYear(1),
 });
 ```
 
+Invitation codes are 40 random alphanumeric characters generated with a cryptographically secure generator.
+
+The `BEFORE_SAVE_CALLBACK` can be any callable. It runs just before the invitation is saved and receives the
+invitation model as its only argument.
+
 now create routes with `refCode`, when user access that route you can use following methods
 ```php
 // Get route
@@ -106,6 +112,30 @@ if( Invite::isAllowed($code,$email) ){
     // either refCode is inavalid, or provided email was not invited against this refCode
 }
 ```
+
+`isAllowed()` compares emails case-insensitively and ignores surrounding whitespace.
+
+`consume()` and `cancel()` are atomic: the status change only happens if the invitation is still `pending` and
+not past `valid_till`, so when two requests use the same code at the same time only one of them gets `true`.
+Always check the return value of `consume()` before creating the account, e.g. inside a transaction:
+
+```php
+DB::transaction(function () use ($code, $data) {
+    if (! Invite::consume($code)) {
+        abort(403, 'This invitation has already been used.');
+    }
+    User::create($data);
+});
+```
+
+The status change is still saved through Eloquent, so model events and observers on the invitation model fire as
+before. The package events (`Invited`, `InvitationConsumed`, `InvitationCanceled`, `InvitationExpired`) are
+dispatched after the surrounding transaction commits, so if it rolls back, the invitation goes back to `pending` and
+listeners never run. Outside a transaction they are dispatched immediately.
+
+A `pending` invitation past its `valid_till` is marked `expired` (firing `InvitationExpired`) the first time it is
+checked. Invitations that were already `successful` or `canceled` keep their status; `isExpired()` still reports
+`true` for them once `valid_till` has passed.
 with help of new trait you have access to invitations sent by user
 ```php
 $user= User::find(1);
@@ -118,8 +148,8 @@ $count = $user->invitations()->count();
 
 *  Junaidnasir\Larainvite\Events\Invited
 *  Junaidnasir\Larainvite\Events\InvitationConsumed
-*  Junaidnasir\Larainvite\Events\InvitedCanceled
-*  Junaidnasir\Larainvite\Events\Expired
+*  Junaidnasir\Larainvite\Events\InvitationCanceled
+*  Junaidnasir\Larainvite\Events\InvitationExpired
 
 all of these events incloses `invitation modal` so you can listen to these events.
 include listener in `EventServiceProvider.php`
@@ -161,4 +191,30 @@ you can also change user model to be used, in `larainvite.php`
 you can also change invitation model to be used, in `larainvite.php`
 ```php
 'InvitationModel' => 'App\Invitation'
+```
+
+## Upgrading to v13.1
+
+* The published migration now creates a unique index on `code`. Existing installs are not changed; to get the same
+  guarantee, add a migration in your app after checking there are no duplicate codes:
+
+  ```php
+  Schema::table('user_invitations', function (Blueprint $table) {
+      $table->dropIndex(['code']);
+      $table->unique('code');
+  });
+  ```
+
+* Invitation codes are now 40 characters (previously 32-character md5 hashes). Existing codes keep working.
+  If a custom migration sized the `code` column for md5 (e.g. `string('code', 32)`), widen it to at least 40
+  characters before upgrading: strict MySQL rejects the insert, and non-strict MySQL truncates the code so every
+  new link is invalid. The stock column is 255 characters.
+* A `$beforeSave` closure is called with the invitation model as its argument; `$this` inside it is still your own
+  class, as before.
+
+## Testing
+
+```bash
+composer install
+composer test
 ```
